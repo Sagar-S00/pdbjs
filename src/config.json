@@ -1,0 +1,20 @@
+{
+  "bot": {
+    "name": "CustomBot",
+    "id": "bot-user"
+  },
+  "pdb": {
+    "email": "ayatolvl@gmail.com",
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXZpY2UiOiJhbmRyb2lkIiwiZXhwIjoxNzY4OTExNTU0LCJpYXQiOjE3Njg4OTM1NTQsInNwZWNpZmllciI6ImFhZWI5OTZmLWM0MGEtNGJiYi1iNmNlLWY1NjQzZjAyYmVhMiIsInRva2VuX3R5cGUiOiJhY2Nlc3NfdG9rZW4iLCJ1c2VyX2lkIjo1NDE3NDQ5LCJ1c2VybmFtZSI6ImRvdG5ldCJ9.Z6639WW8bbw8BumYjEPxREmLy5RomurLOT-jMMpyrcs",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXZpY2UiOiJhbmRyb2lkIiwiZXhwIjoxODAwNDI5NTU0LCJpYXQiOjE3Njg4OTM1NTQsInNwZWNpZmllciI6ImFhZWI5OTZmLWM0MGEtNGJiYi1iNmNlLWY1NjQzZjAyYmVhMiIsInRva2VuX3R5cGUiOiJyZWZyZXNoX3Rva2VuIiwidXNlcl9pZCI6NTQxNzQ0OSwidXNlcm5hbWUiOiJkb3RuZXQifQ.v06BUqA1Qx566P0nnwKOGNcVyodKxPTM32Jh6opUxmo",
+    "expireAt": 1768911554000,
+    "baseUrl": "https://api.personality-database.com/api/v2",
+    "deviceToken": "eyJPUyI6ImFuZHJvaWQiLCJBcHAtVmVyc2lvbiI6IjEuNS40IiwiQXBwLUJ1aWxkTm8iOiI3NzQiLCJNYXJrZXQiOiJHb29nbGVQbGF5IiwiQnJhbmQiOiJhc3VzIiwiTW9kZWwiOiJBU1VTX1gwMFREIiwiQnVuZGxlSUQiOiJtYnRpLnRlc3QubWVudGFsLmhlYWx0aC5wZXJzb25hbGl0eSIsIk1hbnVmYWN0dXJlciI6ImFzdXMiLCJPUy1WZXJzaW9uIjoiOSIsIlNESy1WZXJzaW9uIjoiMjgiLCJYLVBEQi1EZXZpY2UtSUQiOiI2YWU4YmM4MS1hNzdlLTRiZjEtYTEzMC1hYTc4NTQ1NGQwMzEifQ==",
+    "region": "IN",
+    "locale": "en",
+    "timezone": "Asia/Kolkata"
+  },
+  "stream": {
+    "baseUrl": "https://chat.stream-io-api.com"
+  }
+}

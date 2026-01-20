@@ -79,7 +79,7 @@ export class Client extends EventEmitter {
       await this.streamChat.connect(userInfo);
 
       // Query and watch all channels the user is a member of
-      logger.info('Querying user channels...');
+      logger.debug('Querying user channels...');
       const channels = await this.streamChat.queryChannels(
         { members: { $in: [String(userInfo.id)] } },
         [{ last_message_at: -1 }]

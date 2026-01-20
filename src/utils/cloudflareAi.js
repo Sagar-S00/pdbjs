@@ -4,6 +4,7 @@
  */
 
 import axios from 'axios';
+import { logger } from './logger.js';
 
 // =========================
 // CONFIG
@@ -170,7 +171,7 @@ export async function getResponse(channelId) {
 
         return aiResponse;
     } catch (error) {
-        console.error(`Error getting AI response for channel ${channelId}:`, error.message);
+        logger.error(`Error getting AI response for channel ${channelId}:`, error.message);
         return null;
     }
 }

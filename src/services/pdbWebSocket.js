@@ -43,8 +43,6 @@ class PDBWebSocketClient {
     wsUrl.searchParams.set('authorization', user.token);
     wsUrl.searchParams.set('stream-auth-type', 'jwt');
 
-    console.log(wsUrl.toString());
-
     this.ws = new WebSocket(wsUrl.toString());
 
     this.ws.on('open', () => {

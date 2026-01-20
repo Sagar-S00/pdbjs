@@ -28,7 +28,7 @@ class StreamChatService {
         }
 
         try {
-            logger.info(`Connecting to Stream Chat as user ${userInfo.id}...`);
+            logger.debug(`Connecting to Stream Chat as user ${userInfo.id}...`);
 
             // Initialize Stream Chat client
             // allowServerSideConnect: true is set because this is a server-side bot
@@ -68,7 +68,6 @@ class StreamChatService {
 
 
         this.client.on('message.new', (event) => {
-            // console.log('Message received:', event.message.quoted_message);
             this.messageCallbacks.forEach(callback => {
                 try {
                     callback(event);
@@ -279,7 +278,7 @@ class StreamChatService {
         }
 
         try {
-            logger.info('Disconnecting from Stream Chat...');
+            logger.debug('Disconnecting from Stream Chat...');
             await this.client.disconnectUser();
             this.isConnected = false;
             this.client = null;

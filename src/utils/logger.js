@@ -15,9 +15,9 @@ function formatTimestamp() {
 
 export const logger = {
   info: (message, ...args) => {
-    // Only log info if explicitly needed or for startup/important events
-    // For now, keeping it but cleaning up timestamps if not debug
-    console.log(`${colors.cyan}[INFO]${colors.reset} ${message}`, ...args);
+    if (process.env.DEBUG === 'true') {
+      console.log(`${colors.cyan}[INFO]${colors.reset} ${message}`, ...args);
+    }
   },
   error: (message, ...args) => {
     console.error(`${colors.red}[ERROR]${colors.reset} ${message}`, ...args);
@@ -34,3 +34,8 @@ export const logger = {
     console.log(`${colors.green}[SUCCESS]${colors.reset} ${message}`, ...args);
   },
 };
+
+// Show debug mode enabled message on module load
+if (process.env.DEBUG === 'true') {
+  console.log(`${colors.magenta}[DEBUG]${colors.reset} Debug mode enabled`);
+}

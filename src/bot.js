@@ -1,6 +1,6 @@
 import { Client } from './index.js';
 import { logger } from './utils/logger.js';
-import { registerCommands } from './commands.js';
+import { registerCommands } from './commands/index.js';
 import { authenticateUser, closeReadline } from './auth/authenticateUser.js';
 
 /**

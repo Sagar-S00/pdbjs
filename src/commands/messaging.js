@@ -49,6 +49,23 @@ export function registerMessagingCommands(client) {
    * Send command - Send a message to a user via Personality Database chat
    * Usage: !send <user_id> <message>
    */
+
+  // client.command("delete", async (ctx) => {
+  //   if (!ctx.quotedMessage) {
+  //     await ctx.reply('❌ Please reply to a message to delete it.');
+  //     return;
+  //   }
+  //   try {
+
+  //     await streamChatService.deleteMessage(ctx.groupChatID, ctx.quotedMessage.id);
+  //     await ctx.reply('✅ Message deleted successfully.');
+  //   } catch (error) {
+  //     logger.error('Failed to delete message:', error);
+  //     await ctx.reply('❌ Failed to delete message.');
+  //   }
+  // });
+
+
   client.command("send", async (ctx) => {
     if (ctx.args.length < 2) {
       await ctx.reply('❌ Invalid command. Usage: `!send <user_id> <message>`');

@@ -312,6 +312,30 @@ export const pdbApi = {
   },
 
   /**
+   * Delete a message from a group chat
+   * @param {string} channelId - Channel ID (group chat ID)
+   * @param {string} messageId - Message ID to delete
+   * @returns {Promise<Object>} - Deletion response
+   */
+  async deleteMessage(channelId, messageId) {
+    await ensureValidToken();
+    const client = createApiClient();
+
+    const response = await client.delete(`group_chats/${channelId}/message`, {
+      searchParams: {
+        messageID: messageId,
+      },
+    });
+
+    const data = response.body?.data;
+    if (!data) {
+      throw new Error('Invalid response: missing data field');
+    }
+
+    return data;
+  },
+
+  /**
    * Get current token data (for debugging/monitoring)
    */
   getTokenData() {

@@ -15,7 +15,7 @@ async function startBot() {
         closeReadline();
 
         // Initialize client
-        const client = new Client();
+        const client = new Client({ commandPrefix: '!' });
 
         // Register all commands
         registerCommands(client);

@@ -30,18 +30,17 @@ class StreamChatService {
         try {
             logger.debug(`Connecting to Stream Chat as user ${userInfo.id}...`);
 
-            // Initialize Stream Chat client
-            // allowServerSideConnect: true is set because this is a server-side bot
+
             this.client = StreamChat.getInstance(userInfo.apiKey, {
                 allowServerSideConnect: true
             });
 
-            // Connect user with token
+
             this.user = await this.client.connectUser(
                 {
-                    id: String(userInfo.id),     // required
-                    name: userInfo.name,         // optional
-                    image: userInfo.imageUrl     // optional (avatar URL)
+                    id: String(userInfo.id),
+                    name: 'Akane',
+                    image: userInfo.imageUrl
                 },
                 userInfo.token
             );
@@ -238,6 +237,33 @@ class StreamChatService {
 
         } catch (error) {
             logger.error('Failed to send message:', error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Delete a message by ID using PDB API
+     * @param {string} channelId - Channel ID (group chat ID)
+     * @param {string} messageId - ID of the message to delete
+     * @returns {Promise<Object>} Deleted message object
+     */
+    async deleteMessage(channelId, messageId) {
+        if (!this.client) {
+            throw new Error('Not connected to Stream Chat. Call connect() first.');
+        }
+
+        try {
+            logger.debug(`Deleting message ${messageId} from channel ${channelId}`);
+
+            // Use PDB API instead of Stream Chat SDK
+            const { pdbApi } = await import('./pdbApi.js');
+            const response = await pdbApi.deleteMessage(channelId, messageId);
+
+            logger.success(`Message ${messageId} deleted successfully`);
+            return response;
+
+        } catch (error) {
+            logger.error('Failed to delete message:', error.message);
             throw error;
         }
     }

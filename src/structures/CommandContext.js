@@ -9,8 +9,8 @@ import { logger } from '../utils/logger.js';
 export class CommandContext {
   constructor(client, event, command, args) {
     this.client = client;
-    this.event = event;  // Stream Chat SDK event
-    this.message = event.message;  // The message object
+    this.event = event;
+    this.message = event.message;
     this.command = command;
     this.args = args;
 
@@ -18,11 +18,15 @@ export class CommandContext {
     this.sender = this.message.user?.id;
     this.senderName = this.message.user?.name || 'Unknown';
 
-    // Extract channel information from SDK event
+
     this.cid = event.cid;
+    this.groupChatID = event.channel_custom?.groupChatID;
+    this.groupChatType = event.channel_custom?.groupChatType;
     this.channelType = event.channel?.type || event.channel_type || 'messaging';
     this.channelId = event.channel?.id || event.channel_id;
     this.messageId = this.message.id;
+    this.quotedMessage = this.message?.quoted_message || null;
+    this.quotedMessageId = this.message?.quoted_message?.id || null;
   }
 
   /**

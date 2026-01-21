@@ -1,6 +1,7 @@
 import { logger } from '../utils/logger.js';
 import { streamChatService } from '../services/streamChatService.js';
-import * as cloudflareAi from '../utils/cloudflareAi.js';
+
+import { cloudflareAiHandler, checkInvaildLink } from './eventsUtil.js';
 
 /**
  * Stream Chat Event Handlers
@@ -52,53 +53,19 @@ async function handleMessageNew(event) {
     const botUserId = streamChatService.client.userID;
 
     try {
-        // Check if this is a reply to the bot
+
+        await checkInvaildLink(event);
+
         if (message.quoted_message) {
+
             if (message.quoted_message.user && message.quoted_message.user.id == botUserId) {
                 isreply = true;
             }
         }
-
-        // Check if bot is mentioned
         const isMentioned = message.mentioned_users && message.mentioned_users.some(user => user.id === botUserId);
-
-        // If bot is mentioned or replied to, respond with AI
         if (isreply || isMentioned) {
-            const logType = isreply ? 'Reply' : 'Mention';
-            logger.info(`${logType} detected: ${message.id} from ${message.user.name || message.user.id}`);
 
-            // Extract channel information
-            const cid = event.cid; // e.g., "messaging:fun"
-            const [channelType, channelId] = cid.split(':');
-
-            // Get user info
-            const userName = message.user.name || message.user.id;
-            const messageText = message.text || '';
-
-            // Skip if message is empty
-            if (!messageText.trim()) {
-                return;
-            }
-
-            // Add user message to AI thread
-            cloudflareAi.addUserMessage(channelId, userName, messageText);
-
-            // Get AI response
-            const aiResponse = await cloudflareAi.getResponse(channelId);
-
-            if (aiResponse) {
-                // Send AI response to channel
-                await streamChatService.replyMessage(
-                    channelType,
-                    channelId,
-                    aiResponse,
-                    message.id
-                );
-
-                logger.success(`AI response sent to ${channelId}`);
-            } else {
-                logger.error('Failed to get AI response');
-            }
+            await cloudflareAiHandler(event);
         }
     } catch (error) {
         logger.error('Error handling message.new event:', error.message);

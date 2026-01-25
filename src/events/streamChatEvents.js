@@ -1,7 +1,7 @@
 import { logger } from '../utils/logger.js';
 import { streamChatService } from '../services/streamChatService.js';
 
-import { openRouterAiHandler, checkInvaildLink } from './eventsUtil.js';
+import { cloudflareAiHandler, checkInvaildLink } from './eventsUtil.js';
 
 /**
  * Stream Chat Event Handlers
@@ -67,7 +67,7 @@ async function handleMessageNew(event) {
         if (isreply || isMentioned) {
             console.log(isMentioned);
 
-            await openRouterAiHandler(event);
+            await cloudflareAiHandler(event);
         }
     } catch (error) {
         logger.error('Error handling message.new event:', error.message);

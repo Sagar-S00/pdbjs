@@ -1,9 +1,9 @@
-import * as openRouterAi from '../utils/openRouterAi.js';
+import * as cloudflareAi from '../utils/cloudflareAi.js';
 import { logger } from '../utils/logger.js';
 import { streamChatService } from '../services/streamChatService.js';
 import { pdbApi } from '../services/pdbApi.js';
 
-async function openRouterAiHandler(event) {
+async function cloudflareAiHandler(event) {
     const cid = event.cid;
     const message = event.message;
     const [channelType, channelId] = cid.split(':');
@@ -13,8 +13,8 @@ async function openRouterAiHandler(event) {
     if (!messageText.trim()) {
         return;
     }
-    openRouterAi.addUserMessage(channelId, userName, messageText);
-    const aiResponse = await openRouterAi.getResponse(channelId);
+    cloudflareAi.addUserMessage(channelId, userName, messageText);
+    const aiResponse = await cloudflareAi.getResponse(channelId);
 
     if (aiResponse) {
         await streamChatService.replyMessage(
@@ -118,4 +118,4 @@ async function checkInvaildLink(event) {
     }
 }
 
-export { openRouterAiHandler, checkInvaildLink };
+export { cloudflareAiHandler, checkInvaildLink };

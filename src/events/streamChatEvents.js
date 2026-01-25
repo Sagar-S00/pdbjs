@@ -1,7 +1,7 @@
 import { logger } from '../utils/logger.js';
 import { streamChatService } from '../services/streamChatService.js';
 
-import { cloudflareAiHandler, checkInvaildLink } from './eventsUtil.js';
+import { openRouterAiHandler, checkInvaildLink } from './eventsUtil.js';
 
 /**
  * Stream Chat Event Handlers
@@ -48,6 +48,7 @@ async function handleMemberAdded(event) {
 }
 
 async function handleMessageNew(event) {
+    // console.log(event);
     var isreply = false;
     var message = event.message;
     const botUserId = streamChatService.client.userID;
@@ -64,8 +65,9 @@ async function handleMessageNew(event) {
         }
         const isMentioned = message.mentioned_users && message.mentioned_users.some(user => user.id === botUserId);
         if (isreply || isMentioned) {
+            console.log(isMentioned);
 
-            await cloudflareAiHandler(event);
+            await openRouterAiHandler(event);
         }
     } catch (error) {
         logger.error('Error handling message.new event:', error.message);

@@ -1,17 +1,20 @@
-import * as cloudflareAi from '../utils/cloudflareAi.js';
+import * as openRouterAi from '../utils/openRouterAi.js';
 import { logger } from '../utils/logger.js';
 import { streamChatService } from '../services/streamChatService.js';
+import { pdbApi } from '../services/pdbApi.js';
 
-async function cloudflareAiHandler(event) {
+async function openRouterAiHandler(event) {
     const cid = event.cid;
+    const message = event.message;
     const [channelType, channelId] = cid.split(':');
     const userName = message.user.name || message.user.id;
     const messageText = message.text || '';
+
     if (!messageText.trim()) {
         return;
     }
-    cloudflareAi.addUserMessage(channelId, userName, messageText);
-    const aiResponse = await cloudflareAi.getResponse(channelId);
+    openRouterAi.addUserMessage(channelId, userName, messageText);
+    const aiResponse = await openRouterAi.getResponse(channelId);
 
     if (aiResponse) {
         await streamChatService.replyMessage(
@@ -28,9 +31,17 @@ async function cloudflareAiHandler(event) {
 }
 
 
+
+
 async function checkInvaildLink(event) {
     const message = event.message;
-    const messageText = message.copyText || '';
+    const botUserId = streamChatService.client.userID;
+
+    if (message.user.id == botUserId) {
+        return;
+    }
+    const messageText = message?.copyText || message?.content;
+
     if (!messageText.trim()) {
         return;
     }
@@ -43,10 +54,10 @@ async function checkInvaildLink(event) {
 
     const linkRegex = /https?:\/\/(www\.)?personality-database\.com\/join_group\?[^\s]+/gi;
     const groupIdRegex = /cid=([^&\s]+)/;
+    const linkIdRegex = /[?&]id=([^&\s]+)/;
 
     const links = messageText.match(linkRegex);
-    console.log(messageText);
-    console.log(links);
+
     if (!links || links.length === 0) {
         return;
     }
@@ -55,6 +66,11 @@ async function checkInvaildLink(event) {
     for (const link of links) {
 
         const decodedLink = decodeURIComponent(link);
+
+
+        const linkIdMatch = decodedLink.match(linkIdRegex);
+        const linkGroupChatId = linkIdMatch && linkIdMatch[1];
+        // console.log(linkGroupChatId);
 
 
         const cidMatch = decodedLink.match(groupIdRegex);
@@ -71,13 +87,27 @@ async function checkInvaildLink(event) {
 
                     await streamChatService.deleteMessage(event.channel_custom.groupChatID, message.id);
                     logger.success(`Deleted message with invalid group link from ${message.user.name || message.user.id}`);
-                    var mention_message = `@${message.user.name || message.user.id} fuck off don’t send links from other groups.`;
+
+
+                    var mention_message = `@${message.user.name || message.user.id} fuck off don't send links from other groups.`;
+
 
                     await streamChatService.sendMessage({ channelType, channelId: currentGroupId }, mention_message, {
                         mentioned_users: [message.user.id]
                     });
-
                     logger.success(`Replied to invalid group link message`);
+
+
+                    const currentUserId = streamChatService.client.userID;
+                    const groupChatId = event.channel_custom.groupChatID;
+                    const encodedCid = encodeURIComponent(cid);
+
+                    const inviteLink = `https://www.personality-database.com/join_group?cid=${encodedCid}&id=${groupChatId}&inviteFrom=${currentUserId}`;
+
+                    logger.info(`Created invite link: ${inviteLink}`);
+                    await streamChatService.sendMessage({ channelType: linkChannelType, channelId: linkGroupId }, inviteLink);
+
+
                 } catch (error) {
                     logger.error(`Error handling invalid group link: ${error.message}`);
                 }
@@ -88,4 +118,4 @@ async function checkInvaildLink(event) {
     }
 }
 
-export { cloudflareAiHandler, checkInvaildLink };
+export { openRouterAiHandler, checkInvaildLink };

@@ -336,6 +336,51 @@ export const pdbApi = {
   },
 
   /**
+   * Send server message to a group chat
+   * @param {string} groupChatId - Group chat ID
+   * @param {string} message - Message to send
+   * @returns {Promise<Object>} - Response data
+   */
+  async sendServerMessage(groupChatId, message) {
+    await ensureValidToken();
+    const client = createApiClient();
+
+    const response = await client.post(`group_chats/${groupChatId}/server_message`, {
+      json: {
+        message,
+      },
+    });
+
+    const data = response.body?.data;
+    if (!data) {
+      throw new Error('Invalid response: missing data field');
+    }
+
+    return data;
+  },
+
+  /**
+   * Leave a group chat
+   * @param {string} groupChatId - Group chat ID
+   * @returns {Promise<Object>} - Response data
+   */
+  async leaveGroupChat(groupChatId) {
+    await ensureValidToken();
+    const client = createApiClient();
+
+    const response = await client.post(`group_chats/${groupChatId}/leave`, {
+      json: {},
+    });
+
+    const data = response.body?.data;
+    if (!data) {
+      throw new Error('Invalid response: missing data field');
+    }
+
+    return data;
+  },
+
+  /**
    * Get current token data (for debugging/monitoring)
    */
   getTokenData() {

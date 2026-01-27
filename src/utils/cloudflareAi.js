@@ -3,8 +3,7 @@
  * Handles Cloudflare Workers AI integration with group chat support
  */
 
-import { streamText } from 'ai';
-import { createWorkersAI } from 'workers-ai-provider';
+import OpenAI from 'openai';
 import { logger } from './logger.js';
 
 // =========================
@@ -15,14 +14,11 @@ const CLOUDFLARE_API_KEY = process.env.CLOUDFLARE_API_KEY || "DFAAcdEVHAKaV0ZhTF
 const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID || "3860b8a7aef7b8c166e09fe254939799";
 const CLOUDFLARE_MODEL = "@cf/mistralai/mistral-small-3.1-24b-instruct";
 
-// Initialize Workers AI provider
-const env = {
-    AI: {
-        accountId: CLOUDFLARE_ACCOUNT_ID,
-        apiKey: CLOUDFLARE_API_KEY
-    }
-};
-const workersAi = createWorkersAI(env);
+// Initialize OpenAI client with Cloudflare AI endpoint
+const openai = new OpenAI({
+    apiKey: CLOUDFLARE_API_KEY,
+    baseURL: `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1`,
+});
 
 // Default system prompt (can be overridden)
 let SYSTEM_PROMPT = `You are Akane. Real person, rude low-energy 20s goth chick chatting in English/internet style. No roleplay, just be yourself.
@@ -123,50 +119,32 @@ export function addUserMessage(channelId, userName, message) {
  * Get AI response using Cloudflare Workers AI with streaming
  * 
  * @param {string} channelId - The channel ID to get response for
- * @returns {Promise<Response>} Streaming response
+ * @returns {Promise<string|null>} AI-generated response text, or null if error
  */
 export async function getResponse(channelId) {
     try {
         const messages = getThreadMessages(channelId);
 
-        // Use streamText from 'ai' package
-        const result = streamText({
-            model: workersAi(CLOUDFLARE_MODEL),
-            system: SYSTEM_PROMPT,
-            temperature: 1,
-            messages: messages
+        // Use OpenAI SDK with Cloudflare endpoint
+        const chatCompletion = await openai.chat.completions.create({
+            model: CLOUDFLARE_MODEL,
+            messages: [
+                { role: "system", content: SYSTEM_PROMPT },
+                ...messages
+            ],
+            temperature: 1
         });
 
-        // Convert to readable stream and capture the text
-        const response = result.toDataStreamResponse();
+        const assistantResponse = chatCompletion.choices[0]?.message?.content;
 
-        // We need to capture the assistant response for thread history
-        // Clone the response so we can read it
-        const clonedResponse = response.clone();
-        const reader = clonedResponse.body.getReader();
-        const decoder = new TextDecoder();
-        let assistantResponse = '';
+        if (!assistantResponse) {
+            return null;
+        }
 
-        // Read the stream in the background to capture assistant message
-        (async () => {
-            try {
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    const text = decoder.decode(value, { stream: true });
-                    assistantResponse += text;
-                }
+        // Add AI response to thread history
+        addMessage(channelId, "assistant", assistantResponse.trim());
 
-                // Add AI response to thread history
-                if (assistantResponse) {
-                    addMessage(channelId, "assistant", assistantResponse.trim());
-                }
-            } catch (error) {
-                logger.error(`Error capturing assistant response for channel ${channelId}:`, error.message);
-            }
-        })();
-
-        return response;
+        return assistantResponse.trim();
     } catch (error) {
         logger.error(`Error getting AI response for channel ${channelId}:`, error.message);
         return null;

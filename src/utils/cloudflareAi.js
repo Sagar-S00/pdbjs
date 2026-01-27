@@ -3,7 +3,8 @@
  * Handles Cloudflare Workers AI integration with group chat support
  */
 
-import axios from 'axios';
+import { streamText } from 'ai';
+import { createWorkersAI } from 'workers-ai-provider';
 import { logger } from './logger.js';
 
 // =========================
@@ -14,7 +15,14 @@ const CLOUDFLARE_API_KEY = process.env.CLOUDFLARE_API_KEY || "DFAAcdEVHAKaV0ZhTF
 const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID || "3860b8a7aef7b8c166e09fe254939799";
 const CLOUDFLARE_MODEL = "@cf/mistralai/mistral-small-3.1-24b-instruct";
 
-const BASE_URL = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1`;
+// Initialize Workers AI provider
+const env = {
+    AI: {
+        accountId: CLOUDFLARE_ACCOUNT_ID,
+        apiKey: CLOUDFLARE_API_KEY
+    }
+};
+const workersAi = createWorkersAI(env);
 
 // Default system prompt (can be overridden)
 let SYSTEM_PROMPT = `You are Akane. Real person, rude low-energy 20s goth chick chatting in English/internet style. No roleplay, just be yourself.
@@ -85,10 +93,8 @@ function getThreadMessages(channelId) {
         return cache.messages;
     }
 
-    // Initialize with system prompt
-    const messages = [
-        { role: "system", content: SYSTEM_PROMPT }
-    ];
+    // Initialize empty messages array (system prompt passed separately to streamText)
+    const messages = [];
     threadCache.set(channelId, {
         messages,
         lastAccess: Date.now()
@@ -114,51 +120,53 @@ export function addUserMessage(channelId, userName, message) {
 }
 
 /**
- * Get AI response using Cloudflare Workers AI
+ * Get AI response using Cloudflare Workers AI with streaming
  * 
  * @param {string} channelId - The channel ID to get response for
- * @returns {Promise<string|null>} AI-generated response text, or null if error
+ * @returns {Promise<Response>} Streaming response
  */
 export async function getResponse(channelId) {
     try {
         const messages = getThreadMessages(channelId);
 
-        // Convert messages to OpenAI-compatible format
-        const openaiMessages = messages.map(msg => ({
-            role: msg.role,
-            content: msg.content
-        }));
+        // Use streamText from 'ai' package
+        const result = streamText({
+            model: workersAi(CLOUDFLARE_MODEL),
+            system: SYSTEM_PROMPT,
+            temperature: 1,
+            messages: messages
+        });
 
-        // Use Cloudflare Workers AI via OpenAI-compatible API
-        const response = await axios.post(
-            `${BASE_URL}/chat/completions`,
-            {
-                model: CLOUDFLARE_MODEL,
-                messages: openaiMessages
-            },
-            {
-                headers: {
-                    "Authorization": `Bearer ${CLOUDFLARE_API_KEY}`,
-                    "Content-Type": "application/json"
-                },
-                timeout: 30000
+        // Convert to readable stream and capture the text
+        const response = result.toDataStreamResponse();
+
+        // We need to capture the assistant response for thread history
+        // Clone the response so we can read it
+        const clonedResponse = response.clone();
+        const reader = clonedResponse.body.getReader();
+        const decoder = new TextDecoder();
+        let assistantResponse = '';
+
+        // Read the stream in the background to capture assistant message
+        (async () => {
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const text = decoder.decode(value, { stream: true });
+                    assistantResponse += text;
+                }
+
+                // Add AI response to thread history
+                if (assistantResponse) {
+                    addMessage(channelId, "assistant", assistantResponse.trim());
+                }
+            } catch (error) {
+                logger.error(`Error capturing assistant response for channel ${channelId}:`, error.message);
             }
-        );
+        })();
 
-        if (response.status !== 200) {
-            throw new Error(`API returned status ${response.status}`);
-        }
-
-        const aiResponse = response.data?.choices?.[0]?.message?.content;
-
-        if (!aiResponse) {
-            return null;
-        }
-
-        // Add AI response to thread history
-        addMessage(channelId, "assistant", aiResponse);
-
-        return aiResponse;
+        return response;
     } catch (error) {
         logger.error(`Error getting AI response for channel ${channelId}:`, error.message);
         return null;
@@ -171,3 +179,4 @@ export async function getResponse(channelId) {
 export function clearThread(channelId) {
     threadCache.delete(channelId);
 }
+

@@ -12,7 +12,7 @@ import { logger } from './logger.js';
 
 const CLOUDFLARE_API_KEY = process.env.CLOUDFLARE_API_KEY || "DFAAcdEVHAKaV0ZhTFPoZYc7BMcEGi6-S2WTusuV";
 const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID || "3860b8a7aef7b8c166e09fe254939799";
-const CLOUDFLARE_MODEL = "@hf/nousresearch/hermes-2-pro-mistral-7b";
+const CLOUDFLARE_MODEL = "@cf/mistralai/mistral-small-3.1-24b-instruct";
 
 const BASE_URL = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1`;
 

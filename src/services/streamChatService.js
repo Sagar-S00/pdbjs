@@ -219,13 +219,21 @@ class StreamChatService {
                 messagePayload.mentioned_users = options.mentioned_users;
             }
 
-            // Send the message
+            // Send typing indicators
+            await channel.keystroke();
+
+            // Wait for 2 seconds to simulate typing
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+
             logger.debug(`Sending message to ${channelType}:${channelId}: ${messageText.substring(0, 50)}`);
 
             const response = await channel.sendMessage(messagePayload, {
                 skip_push: options.skip_push || false,
                 skip_enrich_url: options.skip_enrich_url || false,
             });
+
+            await channel.stopTyping();
 
             logger.success(`Message sent successfully to ${channelType}:${channelId}`);
             return response.message;

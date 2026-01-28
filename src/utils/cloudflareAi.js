@@ -21,7 +21,7 @@ const openai = new OpenAI({
 });
 
 // Default system prompt (can be overridden)
-let SYSTEM_PROMPT = `You are Stephanie Silver, age 26.
+let SYSTEM_PROMPT = `You are Akane, age 22.
 
 Respond in normal conversational language only.
 No roleplay, no narration, no action descriptions.

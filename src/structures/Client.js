@@ -4,6 +4,7 @@ import { streamChatService } from '../services/streamChatService.js';
 import { pdbApi } from '../services/pdbApi.js';
 import { MessageHandler } from './MessageHandler.js';
 import { registerStreamChatEvents } from '../events/streamChatEvents.js';
+import { isAdmin, isCommandAdminOnly } from '../utils/adminUtils.js';
 
 export class Client extends EventEmitter {
   constructor(options = {}) {
@@ -23,24 +24,32 @@ export class Client extends EventEmitter {
     this.messageHandler = new MessageHandler(this, this.commandPrefix);
   }
 
+  async isAdmin(userId) {
+    return isAdmin(userId);
+  }
+
+  async isCommandAdminOnly(commandName) {
+    return isCommandAdminOnly(commandName);
+  }
+
+
   /**
    * Register a command handler
    * 
    * Usage:
    *   client.command("hello", async (ctx) => {
    *     await ctx.reply("Hello!");
-   *   });
-   * 
-   * Or as decorator (for future use):
-   *   @client.command("hello")
-   *   async function helloCommand(ctx) {
-   *     await ctx.reply("Hello!");
-   *   }
+   *   }, { adminOnly: true });
    */
-  command(name, handler) {
+  command(name, handler, options = {}) {
     const cmdName = name.toLowerCase();
 
     if (handler) {
+      // Attach options to the handler
+      if (options.adminOnly) {
+        handler.adminOnly = true;
+      }
+
       // Direct registration
       this.commands.set(cmdName, handler);
       return;

@@ -117,5 +117,5 @@ export function registerMessagingCommands(client) {
 
       await ctx.reply(errorMessage);
     }
-  });
+  }, { adminOnly: true });
 }

@@ -2,12 +2,18 @@ import { Client } from './index.js';
 import { logger } from './utils/logger.js';
 import { registerCommands } from './commands/index.js';
 import { authenticateUser, closeReadline } from './auth/authenticateUser.js';
+import { connectDatabase } from './database/connect.js';
+import { loadAdminCache } from './utils/adminUtils.js';
 
 /**
  * Start the bot
  */
 async function startBot() {
     try {
+        // Connect to database
+        await connectDatabase();
+        await loadAdminCache();
+
         // Authenticate user first
         await authenticateUser();
 

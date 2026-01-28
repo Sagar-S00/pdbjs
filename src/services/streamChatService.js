@@ -13,7 +13,6 @@ class StreamChatService {
         this.user = null;
         this.isConnected = false;
         this.messageCallbacks = [];
-        this.channels = new Map(); // Cache channels by cid
     }
 
     /**
@@ -32,7 +31,8 @@ class StreamChatService {
 
 
             this.client = StreamChat.getInstance(userInfo.apiKey, {
-                allowServerSideConnect: true
+                allowServerSideConnect: true,
+                timeout: 15000,
             });
 
 
@@ -130,21 +130,16 @@ class StreamChatService {
 
         const cid = `${channelType}:${channelId}`;
 
-        // Return cached channel if available
-        if (this.channels.has(cid)) {
-            return this.channels.get(cid);
-        }
-
         // Get or create channel
+        // Note: We don't cache locally to avoid excessive memory usage.
+        // The SDK maintains its own internal state for watched channels.
         const channel = this.client.channel(channelType, channelId, options);
 
-        // Watch the channel (subscribes to events)
-        await channel.watch();
+        // Ensure channel is initialized/watched
+        if (!channel.initialized) {
+            await channel.watch();
+        }
 
-        // Cache the channel
-        this.channels.set(cid, channel);
-
-        logger.debug(`Channel ${cid} ready`);
         return channel;
     }
 
@@ -283,7 +278,7 @@ class StreamChatService {
         try {
             const channels = await this.client.queryChannels(filter, sort, {
                 watch: true,
-                state: true,
+                state: false, // Reduce memory usage by not fetching full state/messages
                 ...options,
             });
 
@@ -309,11 +304,31 @@ class StreamChatService {
             this.isConnected = false;
             this.client = null;
             this.user = null;
-            this.channels.clear();
             this.messageCallbacks = [];
             logger.success('Disconnected from Stream Chat');
         } catch (error) {
             logger.error('Error disconnecting from Stream Chat:', error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Update user profile
+     * @param {Object} userData - User data to update (id is required)
+     * @returns {Promise<Object>} Updated user object
+     */
+    async updateUser(userData) {
+        if (!this.client) {
+            throw new Error('Not connected to Stream Chat. Call connect() first.');
+        }
+
+        try {
+            logger.debug(`Updating user ${userData.id}...`);
+            const response = await this.client.upsertUser(userData);
+            logger.success(`User ${userData.id} updated successfully`);
+            return response;
+        } catch (error) {
+            logger.error('Failed to update user:', error.message);
             throw error;
         }
     }

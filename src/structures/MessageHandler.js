@@ -1,5 +1,6 @@
 import { CommandContext } from './CommandContext.js';
 import { logger } from '../utils/logger.js';
+import { isAdmin, isCommandAdminOnly } from '../utils/adminUtils.js';
 
 /**
  * Message handler for parsing and executing commands
@@ -8,6 +9,7 @@ export class MessageHandler {
   constructor(client, prefix = '!') {
     this.client = client;
     this.prefix = prefix;
+    this.cooldowns = new Map();
   }
 
   /**
@@ -71,6 +73,39 @@ export class MessageHandler {
       const commandHandler = this.client.commands.get(commandName);
       if (!commandHandler) {
         return;
+      }
+
+      // Check for admin permissions
+      // Check if command is marked as admin-only in options or via database
+      const requiresAdmin = commandHandler.adminOnly === true || await isCommandAdminOnly(commandName);
+
+      const isUserAdmin = await isAdmin(senderId) || senderId === String(this.client.user?.id) || senderId === String(this.client.userId);
+
+      if (requiresAdmin && !isUserAdmin) {
+        const ctx = new CommandContext(this.client, event, commandName, args);
+        await ctx.reply("❌ You do not have permission to use this command.");
+        return;
+      }
+
+      // Cooldown check for non-admins
+      if (!isUserAdmin) {
+        const now = Date.now();
+        const cooldownAmount = 4000; // 4 seconds
+
+        if (this.cooldowns.has(senderId)) {
+          const expirationTime = this.cooldowns.get(senderId) + cooldownAmount;
+          if (now < expirationTime) {
+            // User is on cooldown
+            const timeLeft = (expirationTime - now) / 1000;
+            // Optional: Reply to user or just ignore
+            // const ctx = new CommandContext(this.client, event, commandName, args);
+            // await ctx.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the command.`);
+            return;
+          }
+        }
+
+        this.cooldowns.set(senderId, now);
+        setTimeout(() => this.cooldowns.delete(senderId), cooldownAmount);
       }
 
       // Create context with Stream Chat SDK event

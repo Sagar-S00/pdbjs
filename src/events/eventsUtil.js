@@ -13,9 +13,7 @@ async function cloudflareAiHandler(event) {
     if (!messageText.trim()) {
         return;
     }
-    if (message.id != null || message.id != '') {
-        return;
-    }
+
     cloudflareAi.addUserMessage(channelId, userName, messageText);
     const aiResponse = await cloudflareAi.getResponse(channelId);
 

@@ -100,9 +100,17 @@ function getThreadMessages(channelId) {
     return messages;
 }
 
+const MAX_HISTORY_LENGTH = 40; // 20 user + 20 assistant messages
+
 function addMessage(channelId, role, content) {
     const messages = getThreadMessages(channelId);
     messages.push({ role, content });
+
+    // Enforce history limit
+    while (messages.length > MAX_HISTORY_LENGTH) {
+        messages.shift();
+    }
+
     const cache = threadCache.get(channelId);
     if (cache) {
         cache.lastAccess = Date.now();

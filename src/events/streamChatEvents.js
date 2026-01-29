@@ -1,7 +1,7 @@
 import { logger } from '../utils/logger.js';
 import { streamChatService } from '../services/streamChatService.js';
 
-import { cloudflareAiHandler, checkInvaildLink } from './eventsUtil.js';
+import { cloudflareAiHandler, checkInvaildLink, imageToTextHandler } from './eventsUtil.js';
 
 /**
  * Stream Chat Event Handlers
@@ -48,9 +48,13 @@ async function handleMemberAdded(event) {
 }
 
 async function handleMessageNew(event) {
-    // console.log(event);
+
     var isreply = false;
     var message = event.message;
+    var messageText = message.text;
+    if (messageText.startsWith("!")) {
+        return;
+    }
     const botUserId = streamChatService.client.userID;
 
     try {
@@ -65,8 +69,10 @@ async function handleMessageNew(event) {
         }
         const isMentioned = message.mentioned_users && message.mentioned_users.some(user => user.id === botUserId);
         if (isreply || isMentioned) {
-            console.log(isMentioned);
-
+            if (message.attachments && message.attachments.length > 0) {
+                // console.log(message.attachments);
+                await imageToTextHandler(event);
+            }
             await cloudflareAiHandler(event);
         }
     } catch (error) {

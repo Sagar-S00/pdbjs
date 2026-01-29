@@ -144,6 +144,26 @@ class StreamChatService {
     }
 
     /**
+     * Stop watching a channel
+     * @param {string} channelType - Channel type
+     * @param {string} channelId - Channel ID
+     */
+    async stopWatching(channelType, channelId) {
+        if (!this.client) {
+            return;
+        }
+
+        try {
+            logger.debug(`Stop watching channel ${channelType}:${channelId}`);
+            const channel = this.client.channel(channelType, channelId);
+            await channel.stopWatching();
+            logger.success(`Stopped watching ${channelType}:${channelId}`);
+        } catch (error) {
+            logger.error(`Error stopping watch on ${channelType}:${channelId}:`, error.message);
+        }
+    }
+
+    /**
      * Send a message to a channel
      * Replaces streamApi.sendMessage()
      * 

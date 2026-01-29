@@ -1,7 +1,7 @@
 import * as cloudflareAi from '../utils/cloudflareAi.js';
 import { logger } from '../utils/logger.js';
 import { streamChatService } from '../services/streamChatService.js';
-import { pdbApi } from '../services/pdbApi.js';
+import { describeImage } from '../utils/cloudflareImageToText.js';
 
 async function cloudflareAiHandler(event) {
     const cid = event.cid;
@@ -34,6 +34,25 @@ async function cloudflareAiHandler(event) {
 }
 
 
+async function imageToTextHandler(event) {
+    const cid = event.cid;
+    const message = event.message;
+    const [channelType, channelId] = cid.split(':');
+
+    var mes = await describeImage(message.attachments[0].image_url);
+    if (mes) {
+        await streamChatService.replyMessage(
+            channelType,
+            channelId,
+            mes,
+            message.id
+        );
+
+        logger.success(`AI response sent to ${channelId}`);
+    } else {
+        logger.error('Failed to get AI response');
+    }
+}
 
 
 async function checkInvaildLink(event) {
@@ -109,6 +128,7 @@ async function checkInvaildLink(event) {
 
                     logger.info(`Created invite link: ${inviteLink}`);
                     await streamChatService.sendMessage({ channelType: linkChannelType, channelId: linkGroupId }, inviteLink);
+                    await streamChatService.stopWatching(linkChannelType, linkGroupId);
 
 
                 } catch (error) {
@@ -121,4 +141,4 @@ async function checkInvaildLink(event) {
     }
 }
 
-export { cloudflareAiHandler, checkInvaildLink };
+export { cloudflareAiHandler, checkInvaildLink, imageToTextHandler };

@@ -57,6 +57,21 @@ async function handleMessageNew(event) {
         return;
     }
 
+    // Ignore symbol-only or symbol-heavy messages
+    const alphaNumericCount = (messageText.match(/[a-zA-Z0-9]/g) || []).length;
+    const totalCount = messageText.length;
+
+    // 1. Only symbols (no alphanumeric characters)
+    if (alphaNumericCount === 0) {
+        return;
+    }
+
+    // 2. Too many symbols (if message is long enough to matter)
+    // Require at least 40% alphanumeric characters for messages > 5 chars
+    if (totalCount > 5 && (alphaNumericCount / totalCount) < 0.4) {
+        return;
+    }
+
 
     if (cloudflareAi.isGhosted(message.user.id)) {
         logger.info(`Ignoring message from ghosted user ${message.user.id}`);

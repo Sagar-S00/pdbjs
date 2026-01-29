@@ -14,18 +14,34 @@ async function cloudflareAiHandler(event) {
         return;
     }
 
+
+
     cloudflareAi.addUserMessage(channelId, userName, messageText);
     const aiResponse = await cloudflareAi.getResponse(channelId);
 
     if (aiResponse) {
-        await streamChatService.replyMessage(
-            channelType,
-            channelId,
-            aiResponse,
-            message.id
-        );
+        let finalResponse = aiResponse;
 
-        logger.success(`AI response sent to ${channelId}`);
+        // Check for ghost tag [GHOST:X]
+        const ghostMatch = finalResponse.match(/\[GHOST:(\d+)\]/i);
+        if (ghostMatch) {
+            const minutes = parseInt(ghostMatch[1], 10);
+            if (!isNaN(minutes)) {
+                cloudflareAi.ghostUser(message.user.id, minutes);
+                // Remove the tag from the message shown to user
+                finalResponse = finalResponse.replace(ghostMatch[0], '').trim();
+            }
+        }
+
+        if (finalResponse) {
+            await streamChatService.replyMessage(
+                channelType,
+                channelId,
+                finalResponse,
+                message.id
+            );
+            logger.success(`AI response sent to ${channelId}`);
+        }
     } else {
         logger.error('Failed to get AI response');
     }

@@ -2,6 +2,7 @@ import { logger } from '../utils/logger.js';
 import { streamChatService } from '../services/streamChatService.js';
 
 import { cloudflareAiHandler, checkInvaildLink, imageToTextHandler } from './eventsUtil.js';
+import * as cloudflareAi from '../utils/cloudflareAi.js';
 
 /**
  * Stream Chat Event Handlers
@@ -53,6 +54,12 @@ async function handleMessageNew(event) {
     var message = event.message;
     var messageText = message.text;
     if (messageText.startsWith("!")) {
+        return;
+    }
+
+
+    if (cloudflareAi.isGhosted(message.user.id)) {
+        logger.info(`Ignoring message from ghosted user ${message.user.id}`);
         return;
     }
     const botUserId = streamChatService.client.userID;

@@ -85,6 +85,8 @@ export function registerBasicCommands(client) {
       });
     }
 
+    helpText += `⏳ Cooldown: 6 seconds (for non-admins)`;
+
     await ctx.reply(helpText);
   });
 }

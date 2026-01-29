@@ -90,7 +90,7 @@ export class MessageHandler {
       // Cooldown check for non-admins
       if (!isUserAdmin) {
         const now = Date.now();
-        const cooldownAmount = 4000; // 4 seconds
+        const cooldownAmount = 6000; // 4 seconds
 
         if (this.cooldowns.has(senderId)) {
           const expirationTime = this.cooldowns.get(senderId) + cooldownAmount;
